@@ -1,42 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://viewer.pandasuite.com/api/pandabridge.latest.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pandasuite-bridge/lib/pandasuite-bridge.min.js"></script>
 
 <style>
 body{
 margin:0;
-background:#111;
+background:black;
 color:white;
-font-family:sans-serif;
-text-align:center;
+font-family:Arial;
+text-align:center
 }
 
 video{
-width:100%;
+width:100vw;
+height:100vh;
+object-fit:cover
 }
 
 button{
-margin-top:20px;
-padding:15px 25px;
+position:fixed;
+bottom:40px;
+left:50%;
+transform:translateX(-50%);
+padding:15px 30px;
 font-size:18px;
 border:none;
-background:#2196f3;
-color:white;
-border-radius:8px;
+border-radius:10px;
+background:#00FF88;
+color:black
 }
 </style>
 </head>
 
 <body>
 
-<h2>📸 Caméra</h2>
-
 <video id="video" autoplay playsinline></video>
-
-<br>
 
 <button onclick="capture()">Prendre photo</button>
 
@@ -44,39 +45,41 @@ border-radius:8px;
 
 <script>
 
-PandaBridge.ready(() => {
-console.log("Bridge OK");
-});
+const video = document.getElementById("video");
 
-async function startCamera(){
+async function start(){
 
-const stream=await navigator.mediaDevices.getUserMedia({
+const stream = await navigator.mediaDevices.getUserMedia({
 video:{facingMode:{ideal:"environment"}},
 audio:false
 });
 
-document.getElementById("video").srcObject=stream;
+video.srcObject = stream;
+
 }
 
-startCamera();
+start();
 
 
 function capture(){
 
-const video=document.getElementById("video");
-const canvas=document.getElementById("canvas");
+const canvas = document.getElementById("canvas");
 
-canvas.width=video.videoWidth;
-canvas.height=video.videoHeight;
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
 
 canvas.getContext("2d").drawImage(video,0,0);
 
-const base64=canvas.toDataURL("image/jpeg",0.9);
+const image = canvas.toDataURL("image/jpeg",0.9);
 
-PandaBridge.emit("cameraImage",{
-image:base64,
+if(window.PandaBridge){
+
+PandaBridge.send("capture",{
+image:image,
 timestamp:Date.now()
 });
+
+}
 
 }
 
