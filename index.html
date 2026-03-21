@@ -17,7 +17,6 @@ body {
 
 video {
   width: 100%;
-  height: auto;
 }
 
 button {
@@ -44,7 +43,15 @@ button {
 
 <script>
 
-// démarrer caméra arrière
+let pandaReady = false;
+
+// attendre PandaBridge
+PandaBridge.ready(() => {
+  pandaReady = true;
+  console.log("PandaBridge prêt");
+});
+
+// démarrer caméra
 async function startCamera() {
 
   try {
@@ -56,9 +63,9 @@ async function startCamera() {
 
     document.getElementById("video").srcObject = stream;
 
-  } catch (error) {
+  } catch (err) {
 
-    alert("Erreur caméra : " + error);
+    alert("Erreur caméra : " + err);
 
   }
 }
@@ -80,15 +87,20 @@ function capturePhoto() {
 
   const base64Image = canvas.toDataURL("image/jpeg", 0.9);
 
-  sendToPandaSuite(base64Image);
+  sendImage(base64Image);
 }
 
 
-// envoyer image à PandaSuite via PandaBridge
-function sendToPandaSuite(imageData) {
+// envoyer image à PandaSuite
+function sendImage(image) {
+
+  if (!pandaReady) {
+    alert("PandaBridge pas prêt");
+    return;
+  }
 
   PandaBridge.emit("cameraImage", {
-    image: imageData,
+    image: image,
     timestamp: Date.now()
   });
 
