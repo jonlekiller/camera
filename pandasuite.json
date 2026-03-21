@@ -5,7 +5,7 @@
     {
       "name": "cameraImage",
       "label": "Image capturée",
-      "data": {
+      "queryable": {
         "image": "string",
         "timestamp": "number"
       }
