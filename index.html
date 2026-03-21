@@ -37,53 +37,44 @@ color:black
 
 <body>
 
-<video id="video" autoplay playsinline muted></video>
+<video id="video" autoplay playsinline></video>
 
-<button id="captureBtn">Initialisation caméra...</button>
+<button onclick="capture()">Prendre photo</button>
 
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
 
 const video = document.getElementById("video");
-const button = document.getElementById("captureBtn");
 
-let streamReady = false;
+let stream = null;
 
 
-// démarrer caméra arrière (fallback auto si refusée)
+// sélectionner caméra arrière comme ZXing
 async function startCamera(){
 
-try{
+const devices = await navigator.mediaDevices.enumerateDevices();
 
-// tentative caméra arrière
-const stream = await navigator.mediaDevices.getUserMedia({
-video:{ facingMode:{ exact:"environment" } },
-audio:false
-});
+const cameras = devices.filter(d => d.kind === "videoinput");
 
-video.srcObject = stream;
+let backCamera = cameras.find(d =>
+d.label.toLowerCase().includes("back")
+||
+d.label.toLowerCase().includes("rear")
+);
 
-}catch(e){
-
-// fallback caméra par défaut Android
-const stream = await navigator.mediaDevices.getUserMedia({
-video:true,
-audio:false
-});
-
-video.srcObject = stream;
-
+if(!backCamera){
+backCamera = cameras[0];
 }
 
-// attendre vraie disponibilité vidéo
-video.addEventListener("loadeddata", () => {
-
-streamReady = true;
-
-button.innerText = "Prendre photo";
-
+stream = await navigator.mediaDevices.getUserMedia({
+video:{
+deviceId:{ exact: backCamera.deviceId }
+},
+audio:false
 });
+
+video.srcObject = stream;
 
 }
 
@@ -91,11 +82,11 @@ startCamera();
 
 
 // capture image fiable
-button.onclick = function(){
+function capture(){
 
-if(!streamReady){
+if(!video.videoWidth){
 
-alert("Caméra pas prête");
+alert("Vidéo pas encore prête");
 
 return;
 
@@ -106,14 +97,12 @@ const canvas = document.getElementById("canvas");
 canvas.width = video.videoWidth;
 canvas.height = video.videoHeight;
 
-const ctx = canvas.getContext("2d");
-
-ctx.drawImage(video,0,0);
+canvas.getContext("2d").drawImage(video,0,0);
 
 const image = canvas.toDataURL("image/jpeg",0.9);
 
 
-// envoyer à PandaSuite
+// envoyer à PandaSuite (comme ton scanner)
 
 if(window.PandaBridge){
 
@@ -124,7 +113,7 @@ timestamp:Date.now()
 
 }
 
-};
+}
 
 </script>
 
