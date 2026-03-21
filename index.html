@@ -2,69 +2,109 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Camera Capture</title>
+<title>Camera PandaSuite</title>
 
 <style>
 body {
+  margin: 0;
   font-family: sans-serif;
   text-align: center;
-  margin-top: 40px;
+  background: #111;
+  color: white;
+}
+
+video {
+  width: 100%;
+  height: auto;
 }
 
 button {
+  margin-top: 20px;
   padding: 15px 25px;
   font-size: 18px;
+  border: none;
+  background: #2196f3;
+  color: white;
+  border-radius: 8px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Prendre une photo</h2>
+<h2>📸 Prendre une photo</h2>
 
-<input
-  type="file"
-  accept="image/*"
-  capture="environment"
-  id="cameraInput"
-  style="display:none"
-/>
+<video id="video" autoplay playsinline></video>
 
-<button onclick="openCamera()">📸 Ouvrir la caméra</button>
+<br>
+
+<button onclick="capturePhoto()">Prendre photo</button>
+
+<canvas id="canvas" style="display:none"></canvas>
 
 <script>
 
-function openCamera() {
-  document.getElementById("cameraInput").click();
+// démarrer caméra arrière
+async function startCamera() {
+
+  try {
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" }
+      },
+      audio: false
+    });
+
+    document.getElementById("video").srcObject = stream;
+
+  } catch (error) {
+
+    alert("Impossible d'accéder à la caméra : " + error);
+
+  }
 }
 
-document
-.getElementById("cameraInput")
-.addEventListener("change", function(event) {
+startCamera();
 
-  const file = event.target.files[0];
 
-  if (!file) return;
+// capture photo
+function capturePhoto() {
 
-  const reader = new FileReader();
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
 
-  reader.onload = function(e) {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
 
-    const base64 = e.target.result;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
 
-    window.parent.postMessage({
-      type: "cameraImage",
-      image: base64,
-      filename: file.name,
-      size: file.size,
-      mime: file.type
-    }, "*");
+  const base64Image = canvas.toDataURL("image/jpeg", 0.9);
 
+  sendToPandaSuite(base64Image);
+}
+
+
+// envoyer image à PandaSuite
+function sendToPandaSuite(imageData) {
+
+  const payload = {
+    type: "cameraImage",
+    image: imageData,
+    timestamp: Date.now()
   };
 
-  reader.readAsDataURL(file);
+  // compatibilité maximale WebView PandaSuite
+  if (window.top) {
+    window.top.postMessage(payload, "*");
+  }
 
-});
+  if (window.parent) {
+    window.parent.postMessage(payload, "*");
+  }
+
+}
 
 </script>
 
