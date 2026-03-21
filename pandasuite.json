@@ -4,15 +4,11 @@
   "events": [
     {
       "name": "cameraImage",
-      "label": "Image capturée"
+      "label": "Image capturée",
+      "data": {
+        "image": "string",
+        "timestamp": "number"
+      }
     }
-  
-  "queryable": {
-    "image": {
-      "type": "string"
-    },
-    "timestamp": {
-      "type": "number"
-    }
-  }]
+  ]
 }
