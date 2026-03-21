@@ -1,13 +1,14 @@
 {
   "version": "2.0.0",
+  "name": "Camera",
   "main": "index.html",
   "events": [
     {
-      "name": "cameraImage",
-      "label": "Image capturée",
+      "id": "capture",
+      "name": "Image capturée",
       "queryable": {
-        "image": "string",
-        "timestamp": "number"
+        "image": "",
+        "timestamp": ""
       }
     }
   ]
