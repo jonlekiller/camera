@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Camera PandaSuite</title>
 
+<script src="https://viewer.pandasuite.com/api/pandabridge.latest.js"></script>
+
 <style>
 body {
   margin: 0;
@@ -35,9 +37,7 @@ button {
 <h2>📸 Prendre une photo</h2>
 
 <video id="video" autoplay playsinline></video>
-
 <br>
-
 <button onclick="capturePhoto()">Prendre photo</button>
 
 <canvas id="canvas" style="display:none"></canvas>
@@ -50,9 +50,7 @@ async function startCamera() {
   try {
 
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: "environment" }
-      },
+      video: { facingMode: { ideal: "environment" } },
       audio: false
     });
 
@@ -60,7 +58,7 @@ async function startCamera() {
 
   } catch (error) {
 
-    alert("Impossible d'accéder à la caméra : " + error);
+    alert("Erreur caméra : " + error);
 
   }
 }
@@ -86,23 +84,13 @@ function capturePhoto() {
 }
 
 
-// envoyer image à PandaSuite
+// envoyer image à PandaSuite via PandaBridge
 function sendToPandaSuite(imageData) {
 
-  const payload = {
-    type: "cameraImage",
+  PandaBridge.emit("cameraImage", {
     image: imageData,
     timestamp: Date.now()
-  };
-
-  // compatibilité maximale WebView PandaSuite
-  if (window.top) {
-    window.top.postMessage(payload, "*");
-  }
-
-  if (window.parent) {
-    window.parent.postMessage(payload, "*");
-  }
+  });
 
 }
 
