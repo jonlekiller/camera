@@ -3,31 +3,29 @@
 <head>
 <meta charset="UTF-8">
 
-<script src="https://cdn.jsdelivr.net/npm/pandasuite-bridge/lib/pandasuite-bridge.min.js"></script>
+<script src="https://viewer.pandasuite.com/api/pandabridge.latest.js"></script>
 
 <style>
-body {
-  margin: 0;
-  background: #111;
-  color: white;
-  font-family: sans-serif;
-  text-align: center;
+body{
+margin:0;
+background:#111;
+color:white;
+font-family:sans-serif;
+text-align:center;
 }
 
-video {
-  width: 100%;
-  max-height: 70vh;
-  object-fit: cover;
+video{
+width:100%;
 }
 
-button {
-  margin-top: 20px;
-  padding: 15px 25px;
-  font-size: 18px;
-  border-radius: 8px;
-  border: none;
-  background: #2196f3;
-  color: white;
+button{
+margin-top:20px;
+padding:15px 25px;
+font-size:18px;
+border:none;
+background:#2196f3;
+color:white;
+border-radius:8px;
 }
 </style>
 </head>
@@ -40,69 +38,45 @@ button {
 
 <br>
 
-<button onclick="capturePhoto()">Prendre photo</button>
+<button onclick="capture()">Prendre photo</button>
 
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
 
-let pandaReady = false;
-
-// attendre PandaBridge
 PandaBridge.ready(() => {
-  pandaReady = true;
-  console.log("PandaBridge prêt");
+console.log("Bridge OK");
 });
 
+async function startCamera(){
 
-// démarrer caméra arrière
-async function startCamera() {
+const stream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:{ideal:"environment"}},
+audio:false
+});
 
-  try {
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: "environment" }
-      },
-      audio: false
-    });
-
-    document.getElementById("video").srcObject = stream;
-
-  } catch (error) {
-
-    alert("Erreur accès caméra : " + error);
-
-  }
+document.getElementById("video").srcObject=stream;
 }
 
 startCamera();
 
 
-// capture photo
-function capturePhoto() {
+function capture(){
 
-  if (!pandaReady) {
-    alert("Bridge PandaSuite non prêt");
-    return;
-  }
+const video=document.getElementById("video");
+const canvas=document.getElementById("canvas");
 
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("canvas");
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+canvas.getContext("2d").drawImage(video,0,0);
 
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0);
+const base64=canvas.toDataURL("image/jpeg",0.9);
 
-  const base64 = canvas.toDataURL("image/jpeg", 0.9);
-
-  // envoyer à PandaSuite
-  PandaBridge.send("cameraImage", {
-    image: base64,
-    timestamp: Date.now()
-  });
+PandaBridge.emit("cameraImage",{
+image:base64,
+timestamp:Date.now()
+});
 
 }
 
