@@ -51,11 +51,22 @@ const button = document.getElementById("captureBtn");
 let streamReady = false;
 
 
-// démarrage caméra (compatible Android WebView)
+// démarrer caméra arrière (fallback auto si refusée)
 async function startCamera(){
 
 try{
 
+// tentative caméra arrière
+const stream = await navigator.mediaDevices.getUserMedia({
+video:{ facingMode:{ exact:"environment" } },
+audio:false
+});
+
+video.srcObject = stream;
+
+}catch(e){
+
+// fallback caméra par défaut Android
 const stream = await navigator.mediaDevices.getUserMedia({
 video:true,
 audio:false
@@ -63,7 +74,9 @@ audio:false
 
 video.srcObject = stream;
 
-// attendre que la vidéo soit réellement prête
+}
+
+// attendre vraie disponibilité vidéo
 video.addEventListener("loadeddata", () => {
 
 streamReady = true;
@@ -72,23 +85,17 @@ button.innerText = "Prendre photo";
 
 });
 
-}catch(err){
-
-alert("Erreur accès caméra : " + err.message);
-
-}
-
 }
 
 startCamera();
 
 
-// capture image
+// capture image fiable
 button.onclick = function(){
 
 if(!streamReady){
 
-alert("Caméra pas encore prête");
+alert("Caméra pas prête");
 
 return;
 
@@ -99,12 +106,15 @@ const canvas = document.getElementById("canvas");
 canvas.width = video.videoWidth;
 canvas.height = video.videoHeight;
 
-canvas.getContext("2d").drawImage(video,0,0);
+const ctx = canvas.getContext("2d");
+
+ctx.drawImage(video,0,0);
 
 const image = canvas.toDataURL("image/jpeg",0.9);
 
 
 // envoyer à PandaSuite
+
 if(window.PandaBridge){
 
 PandaBridge.send("capture",{
