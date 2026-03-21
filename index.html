@@ -9,28 +9,22 @@
 body{
 margin:0;
 background:black;
-color:white;
-font-family:Arial;
-text-align:center
+text-align:center;
 }
 
 video{
 width:100vw;
-height:100vh;
-object-fit:cover
+height:80vh;
+object-fit:cover;
 }
 
 button{
-position:fixed;
-bottom:40px;
-left:50%;
-transform:translateX(-50%);
+margin-top:20px;
 padding:15px 30px;
 font-size:18px;
 border:none;
-border-radius:10px;
+border-radius:8px;
 background:#00FF88;
-color:black
 }
 </style>
 </head>
@@ -39,57 +33,51 @@ color:black
 
 <video id="video" autoplay playsinline></video>
 
-<button onclick="capture()">Prendre photo</button>
+<br>
+
+<button id="btn">Prendre photo</button>
 
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
 
 const video = document.getElementById("video");
+const button = document.getElementById("btn");
 
-let stream = null;
+let ready = false;
 
 
-// sélectionner caméra arrière comme ZXing
+// démarrer caméra (exactement comme ZXing)
 async function startCamera(){
 
 const devices = await navigator.mediaDevices.enumerateDevices();
 
 const cameras = devices.filter(d => d.kind === "videoinput");
 
-let backCamera = cameras.find(d =>
-d.label.toLowerCase().includes("back")
-||
-d.label.toLowerCase().includes("rear")
-);
+const cam = cameras[0]; // simple et fiable
 
-if(!backCamera){
-backCamera = cameras[0];
-}
-
-stream = await navigator.mediaDevices.getUserMedia({
-video:{
-deviceId:{ exact: backCamera.deviceId }
-},
+const stream = await navigator.mediaDevices.getUserMedia({
+video:{ deviceId:{ exact: cam.deviceId }},
 audio:false
 });
 
 video.srcObject = stream;
+
+video.onloadeddata = () => {
+ready = true;
+};
 
 }
 
 startCamera();
 
 
-// capture image fiable
-function capture(){
+// capture photo
+button.onclick = function(){
 
-if(!video.videoWidth){
-
-alert("Vidéo pas encore prête");
-
+if(!ready){
+alert("Caméra pas prête");
 return;
-
 }
 
 const canvas = document.getElementById("canvas");
@@ -102,7 +90,7 @@ canvas.getContext("2d").drawImage(video,0,0);
 const image = canvas.toDataURL("image/jpeg",0.9);
 
 
-// envoyer à PandaSuite (comme ton scanner)
+// envoyer à PandaSuite (identique au scanner)
 
 if(window.PandaBridge){
 
@@ -113,7 +101,7 @@ timestamp:Date.now()
 
 }
 
-}
+};
 
 </script>
 
