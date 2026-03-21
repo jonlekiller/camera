@@ -37,9 +37,9 @@ color:black
 
 <body>
 
-<video id="video" autoplay playsinline></video>
+<video id="video" autoplay playsinline muted></video>
 
-<button id="captureBtn" disabled>Chargement caméra...</button>
+<button id="captureBtn">Initialisation caméra...</button>
 
 <canvas id="canvas" style="display:none"></canvas>
 
@@ -48,29 +48,33 @@ color:black
 const video = document.getElementById("video");
 const button = document.getElementById("captureBtn");
 
+let streamReady = false;
+
+
+// démarrage caméra (compatible Android WebView)
 async function startCamera(){
 
 try{
 
 const stream = await navigator.mediaDevices.getUserMedia({
-video:{facingMode:{ideal:"environment"}},
+video:true,
 audio:false
 });
 
 video.srcObject = stream;
 
-/* attendre que la caméra soit prête */
+// attendre que la vidéo soit réellement prête
+video.addEventListener("loadeddata", () => {
 
-video.onloadedmetadata = () => {
+streamReady = true;
 
-button.disabled = false;
 button.innerText = "Prendre photo";
 
-};
+});
 
-}catch(e){
+}catch(err){
 
-alert("Erreur caméra : " + e);
+alert("Erreur accès caméra : " + err.message);
 
 }
 
@@ -79,11 +83,15 @@ alert("Erreur caméra : " + e);
 startCamera();
 
 
+// capture image
 button.onclick = function(){
 
-if(video.videoWidth === 0){
-alert("Caméra pas prête");
+if(!streamReady){
+
+alert("Caméra pas encore prête");
+
 return;
+
 }
 
 const canvas = document.getElementById("canvas");
@@ -95,6 +103,8 @@ canvas.getContext("2d").drawImage(video,0,0);
 
 const image = canvas.toDataURL("image/jpeg",0.9);
 
+
+// envoyer à PandaSuite
 if(window.PandaBridge){
 
 PandaBridge.send("capture",{
