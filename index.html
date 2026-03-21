@@ -2,17 +2,16 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Camera PandaSuite</title>
 
-<script src="https://viewer.pandasuite.com/api/pandabridge.latest.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pandasuite-bridge/lib/pandasuite-bridge.min.js"></script>
 
 <style>
 body {
   margin: 0;
-  font-family: sans-serif;
-  text-align: center;
   background: #111;
   color: white;
+  font-family: sans-serif;
+  text-align: center;
 }
 
 video {
@@ -23,58 +22,42 @@ button {
   margin-top: 20px;
   padding: 15px 25px;
   font-size: 18px;
+  border-radius: 8px;
   border: none;
   background: #2196f3;
   color: white;
-  border-radius: 8px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📸 Prendre une photo</h2>
+<h2>📸 Caméra</h2>
 
 <video id="video" autoplay playsinline></video>
+
 <br>
-<button onclick="capturePhoto()">Prendre photo</button>
+
+<button onclick="capture()">Prendre photo</button>
 
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
 
-let pandaReady = false;
-
-// attendre PandaBridge
-PandaBridge.ready(() => {
-  pandaReady = true;
-  console.log("PandaBridge prêt");
-});
-
-// démarrer caméra
 async function startCamera() {
 
-  try {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: "environment" } },
+    audio: false
+  });
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
-    });
-
-    document.getElementById("video").srcObject = stream;
-
-  } catch (err) {
-
-    alert("Erreur caméra : " + err);
-
-  }
+  document.getElementById("video").srcObject = stream;
 }
 
 startCamera();
 
 
-// capture photo
-function capturePhoto() {
+function capture() {
 
   const video = document.getElementById("video");
   const canvas = document.getElementById("canvas");
@@ -83,27 +66,15 @@ function capturePhoto() {
   canvas.height = video.videoHeight;
 
   const ctx = canvas.getContext("2d");
+
   ctx.drawImage(video, 0, 0);
 
-  const base64Image = canvas.toDataURL("image/jpeg", 0.9);
+  const base64 = canvas.toDataURL("image/jpeg", 0.9);
 
-  sendImage(base64Image);
-}
+  PandaBridge.setData("image", base64);
+  PandaBridge.setData("timestamp", Date.now());
 
-
-// envoyer image à PandaSuite
-function sendImage(image) {
-
-  if (!pandaReady) {
-    alert("PandaBridge pas prêt");
-    return;
-  }
-
-  PandaBridge.emit("cameraImage", {
-    image: image,
-    timestamp: Date.now()
-  });
-
+  PandaBridge.send("cameraImage");
 }
 
 </script>
