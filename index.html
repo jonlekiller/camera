@@ -9,99 +9,67 @@
 body{
 margin:0;
 background:black;
-text-align:center;
-}
-
-video{
-width:100vw;
-height:80vh;
-object-fit:cover;
+color:white;
+font-family:Arial;
+text-align:center
 }
 
 button{
-margin-top:20px;
-padding:15px 30px;
-font-size:18px;
+margin-top:40vh;
+padding:20px 40px;
+font-size:20px;
 border:none;
-border-radius:8px;
+border-radius:10px;
 background:#00FF88;
+color:black
 }
 </style>
 </head>
 
 <body>
 
-<video id="video" autoplay playsinline></video>
+<input
+id="cameraInput"
+type="file"
+accept="image/*"
+capture="environment"
+style="display:none"
+/>
 
-<br>
-
-<button id="btn">Prendre photo</button>
-
-<canvas id="canvas" style="display:none"></canvas>
+<button onclick="openCamera()">Prendre photo</button>
 
 <script>
 
-const video = document.getElementById("video");
-const button = document.getElementById("btn");
+function openCamera(){
 
-let ready = false;
-
-
-// démarrer caméra (exactement comme ZXing)
-async function startCamera(){
-
-const devices = await navigator.mediaDevices.enumerateDevices();
-
-const cameras = devices.filter(d => d.kind === "videoinput");
-
-const cam = cameras[0]; // simple et fiable
-
-const stream = await navigator.mediaDevices.getUserMedia({
-video:{ deviceId:{ exact: cam.deviceId }},
-audio:false
-});
-
-video.srcObject = stream;
-
-video.onloadeddata = () => {
-ready = true;
-};
+document.getElementById("cameraInput").click();
 
 }
 
-startCamera();
+document.getElementById("cameraInput").addEventListener("change", function(e){
 
+const file = e.target.files[0];
 
-// capture photo
-button.onclick = function(){
+if(!file) return;
 
-if(!ready){
-alert("Caméra pas prête");
-return;
-}
+const reader = new FileReader();
 
-const canvas = document.getElementById("canvas");
-
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
-
-canvas.getContext("2d").drawImage(video,0,0);
-
-const image = canvas.toDataURL("image/jpeg",0.9);
-
-
-// envoyer à PandaSuite (identique au scanner)
+reader.onload = function(evt){
 
 if(window.PandaBridge){
 
 PandaBridge.send("capture",{
-image:image,
-timestamp:Date.now()
+image: evt.target.result,
+timestamp: Date.now()
 });
 
 }
 
 };
+
+reader.readAsDataURL(file);
+
+});
 
 </script>
 
