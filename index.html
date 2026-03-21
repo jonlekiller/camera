@@ -39,15 +39,18 @@ color:black
 
 <video id="video" autoplay playsinline></video>
 
-<button onclick="capture()">Prendre photo</button>
+<button id="captureBtn" disabled>Chargement caméra...</button>
 
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
 
 const video = document.getElementById("video");
+const button = document.getElementById("captureBtn");
 
-async function start(){
+async function startCamera(){
+
+try{
 
 const stream = await navigator.mediaDevices.getUserMedia({
 video:{facingMode:{ideal:"environment"}},
@@ -56,12 +59,32 @@ audio:false
 
 video.srcObject = stream;
 
+/* attendre que la caméra soit prête */
+
+video.onloadedmetadata = () => {
+
+button.disabled = false;
+button.innerText = "Prendre photo";
+
+};
+
+}catch(e){
+
+alert("Erreur caméra : " + e);
+
 }
 
-start();
+}
+
+startCamera();
 
 
-function capture(){
+button.onclick = function(){
+
+if(video.videoWidth === 0){
+alert("Caméra pas prête");
+return;
+}
 
 const canvas = document.getElementById("canvas");
 
@@ -81,7 +104,7 @@ timestamp:Date.now()
 
 }
 
-}
+};
 
 </script>
 
